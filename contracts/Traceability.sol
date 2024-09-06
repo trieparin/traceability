@@ -20,9 +20,9 @@ contract Traceability {
     mapping (address => Info) stakeholders;
     event Signed(address acceptor, address indexed requester);
 
-    constructor(bytes32 _product, bytes32 _serial, string memory _company) {
+    constructor(bytes32 _product, bytes32 _serials, string memory _company) {
         product = _product;
-        serials[msg.sender] = _serial;
+        serials[msg.sender] = _serials;
         stakeholders[msg.sender] = Info(_company, true, ROLE.MANUFACTURER);
     }
 
@@ -31,8 +31,8 @@ contract Traceability {
         _;
     }
 
-    modifier checkSerial(bytes32 _serial) {
-        require(_serial == serials[msg.sender], "Wrong Serials");
+    modifier checkSerials(bytes32 _serials) {
+        require(_serials == serials[msg.sender], "Wrong Serials");
         _;
     }
 
@@ -44,10 +44,10 @@ contract Traceability {
 
     function signRequest(
         bytes32 _product, 
-        bytes32 _serial, 
+        bytes32 _serials, 
         bytes32 _shipment, 
         address _acceptor
-    ) external checkProduct(_product) checkSerial(_serial) {
+    ) external checkProduct(_product) checkSerials(_serials) {
         require(stakeholders[msg.sender].exist, "Unathorized");
         require(msg.sender != parties[_acceptor], "Unathorized");
         require(msg.sender != _acceptor, "Unathorized");
@@ -57,11 +57,11 @@ contract Traceability {
     
     function confirmDistribute(
         bytes32 _product, 
-        bytes32 _serial, 
+        bytes32 _serials, 
         address _requester, 
         string calldata _company, 
         ROLE _role
-    ) external checkProduct(_product) checkSerial(_serial) signAccept(_requester) {
+    ) external checkProduct(_product) checkSerials(_serials) signAccept(_requester) {
         require(stakeholders[msg.sender].role != ROLE.PHARMACY, "Unathorized");
         require(_role != ROLE.MANUFACTURER, "Unathorized");
         stakeholders[msg.sender] = Info(_company, true, _role);
@@ -69,10 +69,10 @@ contract Traceability {
 
     function soldDrug(
         bytes32 _product, 
-        bytes32 _serial, 
+        bytes32 _serials, 
         bytes32 _stock, 
         address _customer
-    ) external checkProduct(_product) checkSerial(_serial) {
+    ) external checkProduct(_product) checkSerials(_serials) {
         require(stakeholders[msg.sender].role == ROLE.PHARMACY, "Unathorized");
         serials[msg.sender] = _stock;
         parties[_customer] = msg.sender;
