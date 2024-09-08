@@ -71,10 +71,10 @@ contract Traceability {
         bytes32 _product, 
         bytes32 _serials, 
         bytes32 _stock, 
-        address _customer
+        address _patient
     ) external checkProduct(_product) checkSerials(_serials) {
         require(stakeholders[msg.sender].role == ROLE.PHARMACY, "Unathorized");
         serials[msg.sender] = _stock;
-        parties[_customer] = msg.sender;
+        parties[_patient] = msg.sender;
     }
 }
