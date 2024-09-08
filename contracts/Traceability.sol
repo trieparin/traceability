@@ -75,19 +75,19 @@ contract Traceability {
         address _requester
     ) external validate(_product, _serialize, _distribute) sign(_requester) {
         stakeholders[msg.sender].exist = true;
+        if (stakeholders[msg.sender].role == ROLE.PHARMACY) {
+            // Add stock drug
+        }
     }
 
     function sellDrug(
         bytes32 _product, 
         bytes32 _serialize, 
-        bytes32 _stock, 
-        bytes32 _remain, 
-        bytes32 _sold, 
+        bytes32 _distribute, 
         address _patient
-    ) external validate(_product, _serialize, _stock) auth(_patient) {
+    ) external validate(_product, _serialize, _distribute) auth(_patient) {
         require(stakeholders[msg.sender].role == ROLE.PHARMACY, "Error: Unathorized");
-        distributes[msg.sender] = _remain;
-        distributes[_patient] = _sold;
+        // Add manage drug
         parties[_patient] = msg.sender;
     }
 }
