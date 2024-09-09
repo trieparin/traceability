@@ -9,7 +9,7 @@ contract Traceability {
     }
 
     struct Stakeholder {
-        string company;
+        bytes32 inventory;
         bool exist;
         ROLE role;
     }
@@ -17,36 +17,35 @@ contract Traceability {
     bytes32 product;
     bytes32 serialize;
     mapping (address => Stakeholder) stakeholders;
-    mapping (address => bytes32) distributes;
-    mapping (address => address) parties;
+    mapping (address => mapping (address => bytes32)) distributes;
+    mapping (address => address) relations;
     event Signed(address acceptor, address indexed requester);
 
     constructor(
         bytes32 _product, 
         bytes32 _serialize, 
-        string memory _manufacturer
+        bytes32 _inventory
     ) {
         product = _product;
         serialize = _serialize;
-        distributes[msg.sender] = _serialize;
-        stakeholders[msg.sender] = Stakeholder(_manufacturer, true, ROLE.MANUFACTURER);
+        stakeholders[msg.sender] = Stakeholder(_inventory, true, ROLE.MANUFACTURER);
     }
 
-    modifier validate(bytes32 _product, bytes32 _serialize, bytes32 _distribute) {
-        require(_product == product, "Error: Wrong Product");
-        require(_serialize == serialize, "Error: Wrong Serialize");
-        require(_distribute == distributes[msg.sender], "Error: Wrong Distribution");
+    modifier validate(bytes32 _product, bytes32 _serialize, bytes32 _inventory) {
+        require(product == _product, "Error: Wrong Product");
+        require(serialize == _serialize, "Error: Wrong Serialize");
+        require(stakeholders[msg.sender].inventory == _inventory, "Error: Wrong Inventory");
         _;
     }
 
     modifier auth(address _acceptor) {
         require(stakeholders[msg.sender].exist, "Error: Unathorized");
-        require(msg.sender != _acceptor, "Error: Unathorized");
+        require(msg.sender != _acceptor, "Error: Not Allow");
         _;
     }
 
     modifier sign(address _requester) {
-        require(parties[msg.sender] == _requester, "Error: Unathorized");
+        require(relations[msg.sender] == _requester, "Error: Unathorized");
         emit Signed(msg.sender, _requester);
         _;
     }
@@ -54,40 +53,64 @@ contract Traceability {
     function shipmentRequest(
         bytes32 _product, 
         bytes32 _serialize, 
-        bytes32 _distribute, 
+        bytes32 _inventory, 
+        bytes32 _update, 
         bytes32 _shipment, 
-        address _acceptor,
-        string calldata _company,
+        address _acceptor, 
         ROLE _role
-    ) external validate(_product, _serialize, _distribute) auth(_acceptor) {
+    ) external validate(_product, _serialize, _inventory) auth(_acceptor) {
         require(stakeholders[msg.sender].role != ROLE.PHARMACY, "Error: Unathorized");
-        require(msg.sender != parties[_acceptor], "Error: Unathorized");
-        require(_role != ROLE.MANUFACTURER, "Error: Unathorized");
-        distributes[_acceptor] = _shipment;
-        parties[_acceptor] = msg.sender;
-        stakeholders[_acceptor] = Stakeholder(_company, false, _role);
+        require(relations[_acceptor] != msg.sender, "Error: Not Allow");
+        require(_role != ROLE.MANUFACTURER, "Error: Not Allow");
+        stakeholders[msg.sender].inventory = _update;
+        stakeholders[_acceptor] = Stakeholder(_shipment, false, _role);
+        relations[_acceptor] = msg.sender;
     }
     
     function shipmentConfirm(
         bytes32 _product, 
         bytes32 _serialize, 
+        bytes32 _inventory, 
         bytes32 _distribute, 
         address _requester
-    ) external validate(_product, _serialize, _distribute) sign(_requester) {
+    ) external validate(_product, _serialize, _inventory) sign(_requester) {
+        distributes[_requester][msg.sender] = _distribute;
         stakeholders[msg.sender].exist = true;
-        if (stakeholders[msg.sender].role == ROLE.PHARMACY) {
-            // Add stock drug
-        }
     }
 
     function sellDrug(
         bytes32 _product, 
         bytes32 _serialize, 
-        bytes32 _distribute, 
+        bytes32 _inventory, 
+        bytes32 _update, 
+        bytes32 _drug,
         address _patient
-    ) external validate(_product, _serialize, _distribute) auth(_patient) {
+    ) external validate(_product, _serialize, _inventory) auth(_patient) {
         require(stakeholders[msg.sender].role == ROLE.PHARMACY, "Error: Unathorized");
-        // Add manage drug
-        parties[_patient] = msg.sender;
+        stakeholders[msg.sender].inventory = _update;
+        distributes[msg.sender][_patient] = _drug;
+    }
+
+    function checkInfo(bytes32 _product, bytes32 _serialize) external view returns (bool) {
+        require(product == _product, "Error: Wrong Product");
+        require(serialize == _serialize, "Error: Wrong Serialize");
+        return  true;
+    }
+
+    function checkDistribute(
+        bytes32 _distribute, 
+        address _sender, 
+        address _receiver
+    ) external view returns (bool) {
+        require(distributes[_sender][_receiver] == _distribute, "Error: Wrong Distribution");
+        return true;
+    }
+
+    function checkDrug(
+        bytes32 _drug, 
+        address _pharmacy
+    ) external view returns (bool) {
+        require(distributes[_pharmacy][msg.sender] == _drug, "Error: Wrong Drug");
+        return true;
     }
 }
