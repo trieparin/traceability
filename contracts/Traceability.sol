@@ -9,7 +9,7 @@ contract Traceability {
     }
 
     struct Stakeholder {
-        bytes32 inventory;
+        bytes32 catalog;
         bool exist;
         ROLE role;
     }
@@ -24,17 +24,17 @@ contract Traceability {
     constructor(
         bytes32 _product, 
         bytes32 _serialize, 
-        bytes32 _inventory
+        bytes32 _catalog
     ) {
         product = _product;
         serialize = _serialize;
-        stakeholders[msg.sender] = Stakeholder(_inventory, true, ROLE.MANUFACTURER);
+        stakeholders[msg.sender] = Stakeholder(_catalog, true, ROLE.MANUFACTURER);
     }
 
-    modifier validate(bytes32 _product, bytes32 _serialize, bytes32 _inventory) {
+    modifier validate(bytes32 _product, bytes32 _serialize, bytes32 _catalog) {
         require(product == _product, "Error: Wrong Product");
         require(serialize == _serialize, "Error: Wrong Serialize");
-        require(stakeholders[msg.sender].inventory == _inventory, "Error: Wrong Inventory");
+        require(stakeholders[msg.sender].catalog == _catalog, "Error: Wrong Catalog");
         _;
     }
 
@@ -53,16 +53,16 @@ contract Traceability {
     function shipmentRequest(
         bytes32 _product, 
         bytes32 _serialize, 
-        bytes32 _inventory, 
+        bytes32 _catalog, 
         bytes32 _update, 
         bytes32 _shipment, 
         address _acceptor, 
         ROLE _role
-    ) external validate(_product, _serialize, _inventory) auth(_acceptor) {
+    ) external validate(_product, _serialize, _catalog) auth(_acceptor) {
         require(stakeholders[msg.sender].role != ROLE.PHARMACY, "Error: Unathorized");
         require(relations[_acceptor] != msg.sender, "Error: Not Allow");
         require(_role != ROLE.MANUFACTURER, "Error: Not Allow");
-        stakeholders[msg.sender].inventory = _update;
+        stakeholders[msg.sender].catalog = _update;
         stakeholders[_acceptor] = Stakeholder(_shipment, false, _role);
         relations[_acceptor] = msg.sender;
     }
@@ -70,10 +70,10 @@ contract Traceability {
     function shipmentConfirm(
         bytes32 _product, 
         bytes32 _serialize, 
-        bytes32 _inventory, 
+        bytes32 _catalog, 
         bytes32 _distribute, 
         address _requester
-    ) external validate(_product, _serialize, _inventory) sign(_requester) {
+    ) external validate(_product, _serialize, _catalog) sign(_requester) {
         distributes[_requester][msg.sender] = _distribute;
         stakeholders[msg.sender].exist = true;
     }
@@ -81,13 +81,13 @@ contract Traceability {
     function sellDrug(
         bytes32 _product, 
         bytes32 _serialize, 
-        bytes32 _inventory, 
+        bytes32 _catalog, 
         bytes32 _update, 
         bytes32 _drug,
         address _patient
-    ) external validate(_product, _serialize, _inventory) auth(_patient) {
+    ) external validate(_product, _serialize, _catalog) auth(_patient) {
         require(stakeholders[msg.sender].role == ROLE.PHARMACY, "Error: Unathorized");
-        stakeholders[msg.sender].inventory = _update;
+        stakeholders[msg.sender].catalog = _update;
         distributes[msg.sender][_patient] = _drug;
     }
 
