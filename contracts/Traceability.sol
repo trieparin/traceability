@@ -91,6 +91,11 @@ contract Traceability {
         distributes[msg.sender][_patient] = _drug;
     }
 
+    function checkAuth(address _stakeholder) external view returns (ROLE) {
+        require(relations[msg.sender] == _stakeholder, "Error: Unathorized");
+        return stakeholders[msg.sender].role;
+    }
+
     function checkInfo(bytes32 _product, bytes32 _serialize) external view returns (bool) {
         require(product == _product, "Error: Wrong Product");
         require(serialize == _serialize, "Error: Wrong Serialize");
