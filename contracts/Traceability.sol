@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.27;
 
 contract Traceability {
     enum ROLE {
@@ -89,6 +89,11 @@ contract Traceability {
         require(stakeholders[msg.sender].role == ROLE.PHARMACY, "Error: Unathorized");
         stakeholders[msg.sender].catalog = _update;
         distributes[msg.sender][_patient] = _drug;
+    }
+
+    function checkAuth(address _stakeholder) external view returns (ROLE) {
+        require(relations[msg.sender] == _stakeholder, "Error: Unathorized");
+        return stakeholders[msg.sender].role;
     }
 
     function checkInfo(bytes32 _product, bytes32 _serialize) external view returns (bool) {
