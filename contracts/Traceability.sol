@@ -68,19 +68,14 @@ contract Traceability {
     
     function shipmentConfirm(
         bytes32 _product, 
-        bytes32 _serialize, 
+        bytes32 _serialize,
+        bytes32 _distribute,  
         bytes32 _shipment, 
-        bytes32 _distribute, 
         address _requester
     ) external validate(_product, _serialize, keccak256('')) sign(_requester) {
         distributes[_requester][msg.sender] = _distribute;
         stakeholders[msg.sender].catalog = _shipment;
         stakeholders[msg.sender].exist = true;
-    }
-
-    function checkAuth(address _stakeholder) external view returns (ROLE) {
-        require(relations[msg.sender] == _stakeholder, "Error: Unathorized");
-        return stakeholders[msg.sender].role;
     }
 
     function checkInfo(bytes32 _product, bytes32 _serialize) external view returns (bool) {
