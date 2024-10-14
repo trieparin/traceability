@@ -32,9 +32,9 @@ contract Traceability {
     }
 
     modifier validate(bytes32 _product, bytes32 _serialize, bytes32 _catalog) {
-        require(product == _product, "Error: Wrong Product");
-        require(serialize == _serialize, "Error: Wrong Serialize");
-        require(stakeholders[msg.sender].catalog == _catalog, "Error: Wrong Catalog");
+        require(product == _product, "Error: Wrong Product Information");
+        require(serialize == _serialize, "Error: Wrong Serialize Information");
+        require(stakeholders[msg.sender].catalog == _catalog, "Error: Wrong Address/Catalog Information");
         _;
     }
 
@@ -79,9 +79,9 @@ contract Traceability {
     }
 
     function checkInfo(bytes32 _product, bytes32 _serialize) external view returns (bool) {
-        require(product == _product, "Error: Wrong Product");
-        require(serialize == _serialize, "Error: Wrong Serialize");
-        return  true;
+        require(product == _product, "Error: Wrong Product Information");
+        require(serialize == _serialize, "Error: Wrong Serialize Information");
+        return true;
     }
 
     function checkDistribute(
@@ -89,7 +89,7 @@ contract Traceability {
         address _sender, 
         address _receiver
     ) external view returns (bool) {
-        require(distributes[_sender][_receiver] == _distribute, "Error: Wrong Distribution");
+        require(distributes[_sender][_receiver] == _distribute, "Error: Wrong Distribution Information");
         return true;
     }
 }
