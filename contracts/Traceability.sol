@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.27;
+pragma solidity ^0.8.28;
 
 contract Traceability {
     enum ROLE {
@@ -32,9 +32,9 @@ contract Traceability {
     }
 
     modifier validate(bytes32 _product, bytes32 _serialize, bytes32 _catalog) {
-        require(product == _product, "Error: Wrong Product");
-        require(serialize == _serialize, "Error: Wrong Serialize");
-        require(stakeholders[msg.sender].catalog == _catalog, "Error: Wrong Catalog");
+        require(product == _product, "Error: Wrong Product Information");
+        require(serialize == _serialize, "Error: Wrong Serialize Information");
+        require(stakeholders[msg.sender].catalog == _catalog, "Error: Wrong Address/Catalog Information");
         _;
     }
 
@@ -55,7 +55,6 @@ contract Traceability {
         bytes32 _serialize, 
         bytes32 _catalog, 
         bytes32 _update, 
-        bytes32 _shipment, 
         address _acceptor, 
         ROLE _role
     ) external validate(_product, _serialize, _catalog) auth(_acceptor) {
@@ -63,43 +62,26 @@ contract Traceability {
         require(relations[_acceptor] != msg.sender, "Error: Not Allow");
         require(_role != ROLE.MANUFACTURER, "Error: Not Allow");
         stakeholders[msg.sender].catalog = _update;
-        stakeholders[_acceptor] = Stakeholder(_shipment, false, _role);
+        stakeholders[_acceptor] = Stakeholder(keccak256(''), false, _role);
         relations[_acceptor] = msg.sender;
     }
     
     function shipmentConfirm(
         bytes32 _product, 
-        bytes32 _serialize, 
-        bytes32 _catalog, 
-        bytes32 _distribute, 
+        bytes32 _serialize,
+        bytes32 _distribute,  
+        bytes32 _shipment, 
         address _requester
-    ) external validate(_product, _serialize, _catalog) sign(_requester) {
+    ) external validate(_product, _serialize, keccak256('')) sign(_requester) {
         distributes[_requester][msg.sender] = _distribute;
+        stakeholders[msg.sender].catalog = _shipment;
         stakeholders[msg.sender].exist = true;
     }
 
-    function sellDrug(
-        bytes32 _product, 
-        bytes32 _serialize, 
-        bytes32 _catalog, 
-        bytes32 _update, 
-        bytes32 _drug,
-        address _patient
-    ) external validate(_product, _serialize, _catalog) auth(_patient) {
-        require(stakeholders[msg.sender].role == ROLE.PHARMACY, "Error: Unathorized");
-        stakeholders[msg.sender].catalog = _update;
-        distributes[msg.sender][_patient] = _drug;
-    }
-
-    function checkAuth(address _stakeholder) external view returns (ROLE) {
-        require(relations[msg.sender] == _stakeholder, "Error: Unathorized");
-        return stakeholders[msg.sender].role;
-    }
-
     function checkInfo(bytes32 _product, bytes32 _serialize) external view returns (bool) {
-        require(product == _product, "Error: Wrong Product");
-        require(serialize == _serialize, "Error: Wrong Serialize");
-        return  true;
+        require(product == _product, "Error: Wrong Product Information");
+        require(serialize == _serialize, "Error: Wrong Serialize Information");
+        return true;
     }
 
     function checkDistribute(
@@ -107,15 +89,7 @@ contract Traceability {
         address _sender, 
         address _receiver
     ) external view returns (bool) {
-        require(distributes[_sender][_receiver] == _distribute, "Error: Wrong Distribution");
-        return true;
-    }
-
-    function checkDrug(
-        bytes32 _drug, 
-        address _pharmacy
-    ) external view returns (bool) {
-        require(distributes[_pharmacy][msg.sender] == _drug, "Error: Wrong Drug");
+        require(distributes[_sender][_receiver] == _distribute, "Error: Wrong Distribution Information");
         return true;
     }
 }
