@@ -78,6 +78,10 @@ contract Traceability {
         stakeholders[msg.sender].exist = true;
     }
 
+    function checkRole() external view returns (ROLE) {
+        return stakeholders[msg.sender].role;
+    }
+
     function checkInfo(bytes32 _product, bytes32 _serialize) external view returns (bool) {
         require(product == _product, "Error: Wrong Product Information");
         require(serialize == _serialize, "Error: Wrong Serialize Information");
