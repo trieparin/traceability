@@ -20,6 +20,7 @@ contract Traceability {
     mapping (address => mapping (address => bytes32)) distributes;
     mapping (address => address) relations;
     event Signed(address acceptor, address indexed requester);
+    event Distributed(bytes32 distribute);
 
     constructor(
         bytes32 _product, 
@@ -76,6 +77,7 @@ contract Traceability {
         distributes[_requester][msg.sender] = _distribute;
         stakeholders[msg.sender].catalog = _shipment;
         stakeholders[msg.sender].exist = true;
+        emit Distributed(_distribute);
     }
 
     function checkRole() external view returns (ROLE) {
